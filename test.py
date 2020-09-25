@@ -1,9 +1,4 @@
-# Array for a 5 by 5 mesh
-inputMesh = [["-0.16000", "-0.16000", "-0.20000", "-0.20000", "-0.25000"],
-             ["-0.25000", "-0.19000", "-0.18000", "-0.20000", "-0.28000"],
-             ["-0.18000", "-0.20000", "-0.28000", "-0.24000", "-0.25000"],
-             ["-0.20000", "-0.22000", "-0.25000", "-0.30000", "-0.28000"],
-             ["-0.26000", "-0.25000", "-0.34000", "-0.28000", "-0.35000"]]
+import re
 meshPositionString = ""
 convertedGcode = []
 errorString = "01234"
@@ -20,16 +15,11 @@ def main():
 
     for i in range(len(cacheMesh)):
         for j in range(len(cacheMesh[i])):
-            meshPositionString = gcodeBuilder(j, i, inputMesh[i][j])
+            meshPositionString = gcodeBuilder(j, i, input_mesh_array[i][j])
             print(meshPositionString)
             counter = counter+1
-    # counter = 1
-    # for i in range(len(inputMesh)):
-    #     for j in range(len(inputMesh[i])):
-    #         meshPositionString = gcodeBuilder(i, j, inputMesh[i][j])
-    #         print(meshPositionString)
-    #         print(counter)
-    #         counter = counter + 1
+            # print(counter)
+        counter = counter + 1
 
 
 def gcodeBuilder(x, y, z):
@@ -40,24 +30,32 @@ def gcodeBuilder(x, y, z):
 def readFile(filename):
     with open(filename) as my_file:
         for line in my_file:
-            formattedLine = line.replace(" ", "")
-            if(formattedLine == "01\n" or formattedLine == "012\n"
-               or formattedLine == "0123\n" or formattedLine == "01234\n"):
-                print("First line is bs")
+
+            # Skip extra number lines from top
+            if (line.replace(" ", "").replace("\n", "").isnumeric()):
                 continue
-            else:
-                superFormatted = splitAndKeep(line[1:].replace("\n", ""))
-                input_mesh_array.append(superFormatted)
-            #  input_mesh_array.append(line)
-            #  print(line)
+
+            # remove extra numbers from the front of the line
+            if line[:1].isnumeric():
+                line = line[1:]
+
+            # remove newline characters
+            formattedLine = cleanLine(line.replace("\n", ""))
+
+            # split by whitespaces
+            input_mesh_array.append(formattedLine[0].split())
+
     my_file.close()
+    print(input_mesh_array)
     return input_mesh_array
 
 
-def splitAndKeep(s):
-    sep = "-"
+# cleanns a line
+def cleanLine(s):
+    sep = "([+-])"
     p = chr(ord(max(s))+1)
-    return s.replace(sep, p+sep).split(p)
+    s = s.replace(sep, p+sep).split(p)
+    return s
 
 
 if __name__ == "__main__":
