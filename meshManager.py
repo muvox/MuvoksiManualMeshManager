@@ -1,8 +1,6 @@
-import re
-meshPositionString = ""
-convertedGcode = []
-errorString = "01234"
+import io
 input_mesh_array = []
+
 
 
 def main():
@@ -13,6 +11,7 @@ def main():
         while(" " in array):
             array.remove(" ")
 
+    #print(input_mesh_array)
     for i in range(len(cacheMesh)):
         for j in range(len(cacheMesh[i])):
             meshPositionString = gcodeBuilder(j, i, input_mesh_array[i][j])
@@ -20,6 +19,25 @@ def main():
             counter = counter+1
             # print(counter)
         counter = counter + 1
+
+def readInputToMeshGrid(meshInput):
+    formattedMesh = []
+    lineSplitMesh = meshInput.splitlines()
+    for line in lineSplitMesh:
+        if not line:
+            continue
+        if (line.replace(" ", "").replace("\n", "").isnumeric()):
+            continue
+        if line[:1].isnumeric():
+            line = line[1:]
+
+        # remove newline characters
+        formattedLine = cleanLine(line.replace("\n", ""))
+
+        # split by whitespaces
+        formattedMesh.append(formattedLine[0].split())
+    # print(formattedMesh)
+    return formattedMesh
 
 
 def gcodeBuilder(x, y, z):
@@ -46,7 +64,7 @@ def readFile(filename):
             input_mesh_array.append(formattedLine[0].split())
 
     my_file.close()
-    print(input_mesh_array)
+    # print(input_mesh_array)
     return input_mesh_array
 
 
@@ -56,7 +74,3 @@ def cleanLine(s):
     p = chr(ord(max(s))+1)
     s = s.replace(sep, p+sep).split(p)
     return s
-
-
-if __name__ == "__main__":
-    main()
