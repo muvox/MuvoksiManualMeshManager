@@ -11,7 +11,7 @@ def main():
         while(" " in array):
             array.remove(" ")
 
-    #print(input_mesh_array)
+    print(input_mesh_array)
     for i in range(len(cacheMesh)):
         for j in range(len(cacheMesh[i])):
             meshPositionString = gcodeBuilder(j, i, input_mesh_array[i][j])
@@ -74,3 +74,6 @@ def cleanLine(s):
     p = chr(ord(max(s))+1)
     s = s.replace(sep, p+sep).split(p)
     return s
+
+# if __name__ == '__main__':
+    # main()

@@ -22,10 +22,9 @@ def gridBuilder(mesh):
     global keyStore
     keyStore = []
     keyCounter = 0
-    rowCounter = 0
     buttonRow = []
     buttonGrid = [[]]
-    frameHeaderStore = []
+    frameHeaderStore = [[]]
     frameHeaderRow = []
 
     for x, row in enumerate(mesh):
@@ -53,9 +52,11 @@ def gridBuilder(mesh):
                 [button4, button3]
                 ]
 
+            headerString = str(x)+str(y)
+            # print(headerString)
             # Generate headers for grid frames
-            frameHeaderRow.append(str(x)+str(y))
-            # frameHeaderRow.append(colKey)
+            # frameHeaderRow.append(headerString)
+            frameHeaderRow.append(headerString)
 
             # Add input fields key value into store for later iterations
             keyRow.append(colKey)
@@ -66,15 +67,20 @@ def gridBuilder(mesh):
         # Add the row of input keys into another list for multidimensional
         # iterations
         frameHeaderStore.append(frameHeaderRow)
+        frameHeaderRow = []
         keyStore.append(keyRow)
-        rowCounter = rowCounter + 1
         buttonGrid.append(buttonRow)
         buttonRow = []
         keyRow = []
         colKey = []
 
-    grid = ([sg.Frame(yy, y) for y, yy in zip(x, xx)] for x, xx in zip(buttonGrid, frameHeaderStore))
+    # Create frame for each of the element groups
+    grid = ([sg.Frame(yy, y) for y, yy in zip(x, xx)]
+            for x, xx in zip(buttonGrid, frameHeaderStore))
+    # grid = ([sg.Frame('', y) for y in x] for x in buttonGrid)
+
     return grid
+
 
 def layoutBuilder(newGrid, meshInput):
     gridFrame = gridBuilder(newGrid)
@@ -86,11 +92,12 @@ def layoutBuilder(newGrid, meshInput):
         ]
     col2 = [
         [sg.Text('2. Edit mesh')],
-        [sg.Frame('', gridFrame, key='-GRID-')]
+        [sg.Frame('', gridFrame, key='-GRID-')],
+        [sg.Button('Export')]
     ]
     col3 = [
         [sg.Text('Output commands', size=(60, 1))],
-        [sg.Multiline('', size=(60, 40), key='-OUT-')]
+        [sg.Multiline('', size=(60, 40), key='-OUT-', do_not_clear=True)]
     ]
     layout = [[
         sg.Col(col1),
@@ -102,9 +109,11 @@ def layoutBuilder(newGrid, meshInput):
 
 def gridController(window, values, event):
     coordinate = event[:2]
-    valueString = coordinate+"input"
-    currentValue = float(values[valueString])
-    print(currentValue)
+    # print(coordinate)
+    coordinateString = coordinate+"input"
+    # print(coordinateString)
+    currentValue = float(values[coordinateString])
+    # print(currentValue)
     if "plusplus" in event:
         updatedValue = currentValue+0.1
     elif "plus" in event:
@@ -114,18 +123,37 @@ def gridController(window, values, event):
     elif "minu" in event:
         updatedValue = currentValue-0.01
 
-    fixedValue = round(updatedValue,2)
-    print("{}".format(currentValue, '.5f'))
+    fixedValue = round(updatedValue, 2)
 
-    # TODO: If value positive, add plus sign
-    window[valueString].update(fixedValue)
+    # Make sure the value has a plus sign if its greater than or equal to zero
+    # Also make sure that the value has right amount of zeroe's
+    if fixedValue >= 0:
+        updatedString = '+'+str(fixedValue)
+        while len(updatedString) < 8:
+            updatedString = updatedString+'0'
+        print(updatedString)
+    else:
+        updatedString = str(fixedValue)
+        while len(updatedString) < 8:
+            updatedString = updatedString+'0'
+
+    window[coordinateString].update(updatedString)
+
+def outputBuilder(window, values, keystore):
+    for x, row in enumerate(keystore):
+        for y, col in enumerate(row):
+            coordinateString = str(keyStore[x][y])[0:2]
+            fixedString = "G29 S3 I"+coordinateString[0:1]+" J"+coordinateString[1:2]+' Z'+values[col]
+            window['-OUT-'].update(fixedString+'\n', append=True)
 
 
 # Create an event loop
 def main():
     global keyStore
     global defaultMeshInput
+    global gridMesh
     defaultGrid = mmmm.readInputToMeshGrid(defaultMeshInput)
+    print(defaultGrid)
     layout = layoutBuilder(defaultGrid, defaultMeshInput)
     window = sg.Window("Demo", layout, default_element_size=(10, 10))
 
@@ -137,23 +165,16 @@ def main():
             break
         if event == "Submit":
             newInput = mmmm.readInputToMeshGrid(values['-IN-'])
-            # print(keyStore)
-            # for x, row in enumerate(keyStore):
-            #     for y, col in enumerate(row):
-            #         # print(col)
-            #         window[col].update(newInput[x][y])
-            # close old window
             newGrid = mmmm.readInputToMeshGrid(values['-IN-'])
-            print('wokrs2')
             layout = layoutBuilder(newGrid, values['-IN-'])
             window1 = sg.Window("Demo", layout, default_element_size=(10, 10))
             window.Close()
             window = window1
-
-
-        if "plus" or "minus" in event:
+        elif "plus" in event or "minus" in event:
+            # print(event)
             gridController(window, values, event)
-
+        elif event == 'Export':
+            outputBuilder(window, values, keyStore)
     window.close()
 
 
