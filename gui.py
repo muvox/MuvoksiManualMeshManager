@@ -142,7 +142,7 @@ def gridController(window, values, event):
 def outputBuilder(window, values, keystore):
     for x, row in enumerate(keystore):
         for y, col in enumerate(row):
-            coordinateString = str(keyStore[x][y])[0:2]
+            coordinateString = str(keyStore[y][x])[0:2]
             fixedString = "G29 S3 I"+coordinateString[0:1]+" J"+coordinateString[1:2]+' Z'+values[col]
             window['-OUT-'].update(fixedString+'\n', append=True)
 
